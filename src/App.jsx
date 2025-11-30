@@ -1,72 +1,103 @@
+import { useId, useState } from "react";
 import "./App.css";
-
-import fields from "./../data/fields.js";
-import { useState } from "react";
-import Step from "./components/Step/Step.jsx";
+import toast from "react-hot-toast";
+import loginSchema from "../validators/loginValidatod.js";
 
 function App() {
-  const [programmingFields] = useState(fields);
-  const [field, setField] = useState("-1");
-  const [steps, setSteps] = useState([]);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-  const findFieldSteps = (newField) => {
-    if (newField !== "-1") {
-      const mainField = programmingFields.find(
-        (field) => field.id === newField
-      );
+  const id = useId();
 
-      setSteps(mainField.technologies);
-    }
+  const loginHandler = () => {
+    toast.loading("در حال بررسی اطلاعات ...", {
+      duration: 2000,
+    });
+
+    const newUser = { username, password };
+
+    const result = loginSchema.safeParse(newUser);
+
+    setTimeout(() => {
+      if (result.success) {
+        return toast.success("ورود با موفقیت انجام شد");
+      }
+
+      return toast.error(result.error.issues[0].message);
+    }, 2000);
   };
 
   return (
     <>
-      <div id="card">
-        <div id="header">
-          <h1 className="title">مسیر سبز - راهنمای مسیر شما</h1>
+      <div className="flex justify-between *:w-1/2 h-screen *:h-full">
+        <div>
+          <div id="form">
+            <header id="form-header">
+              <h1 id="form-title">خوش آمدید</h1>
+              <p id="form-caption">
+                به پنل کاربری خود خوش آمدید, لطفا جهت ادامه اطلاعات خود را تکمیل
+                نمائید.
+              </p>
+            </header>
+            <main id="form-main">
+              <div className="input-field">
+                <label htmlFor={id + "username"} className="input-label">
+                  نام کاربری:
+                </label>
+                <input
+                  value={username}
+                  onChange={(event) => setUsername(event.target.value)}
+                  type="text"
+                  className="input-element"
+                  id={id + "username"}
+                  placeholder="لطفا نام کاربری یا شماره موبایل خود را وارد نمائید ..."
+                />
+              </div>
+              <div className="input-field">
+                <label htmlFor={id + "password"} className="input-label">
+                  {" "}
+                  گذرواژه:{" "}
+                </label>
+                <input
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  type="text"
+                  className="input-element"
+                  id={id + "password"}
+                  placeholder="********"
+                />
+                <div className="forgot-password-field">
+                  <span className="link-text"> گذرواژه ام را فراموش کردم </span>
+                </div>
+              </div>
+            </main>
+            <footer className="grow space-y-3 w-full!">
+              <div className="flex items-center gap-1">
+                <input type="checkbox" id={id + "remember-me"} />
+                <label
+                  htmlFor={id + "remember-me"}
+                  className="remember-me-label"
+                >
+                  لطفا مرا به خاطر بسپار.
+                </label>
+              </div>
+              <button id="submit-button" onClick={loginHandler}>
+                ادامه و ورود
+              </button>
+              <div className="hasnt-account-field">
+                <div className="hasnt-account">
+                  <p className="field-label">حساب کاربری ندارید؟</p>
+                  <span className="link-text"> ثبت نام کنید </span>
+                </div>
+              </div>
+            </footer>
+          </div>
         </div>
-        <div id="content">
-          <div>
-            <select
-              id="select-category"
-              value={field}
-              onChange={(event) => {
-                setField(event.target.value);
-                findFieldSteps(event.target.value);
-              }}
-            >
-              <option value="-1">لطفا فیلد مورد نظر را انتخاب نمایید</option>
-              {programmingFields.map((field) => (
-                <option key={field.id} value={field.id}>
-                  {field.title}
-                </option>
-              ))}
-            </select>
-          </div>
 
-          {field !== "-1" && (
-            <div>
-              <div className="selected-category-show">
-                <span> نقشه اختصاصی شما برای </span>
-                <span id="selected-roadmap-title"> {field} </span>:
-              </div>
-            </div>
-          )}
-
-          {/* <!-- is-empty className --> */}
-          <div id="roadmap" className={field === "-1" ? "is-empty" : ""}>
-            {field === "-1" ? (
-              <div className="empty-list">
-                <p>در ابتدا لطفا حوزه مورد نظر خود را انتخاب فرمایید</p>
-              </div>
-            ) : (
-              steps.map((step) => <Step key={step.id} {...step} />)
-            )}
-          </div>
+        <div id="introduction">
+          <img src="/public/images/image.png" />
         </div>
       </div>
-
-      <div id="background"></div>
     </>
   );
 }
