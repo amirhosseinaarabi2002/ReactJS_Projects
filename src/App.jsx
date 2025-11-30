@@ -1,181 +1,72 @@
 import "./App.css";
-import Footer from "./components/Footer/Footer";
-import Header from "./components/Header/Header";
-import Todo from "./components/Todo/Todo";
-import AddTodoModal from "./components/AddTodoModal/AddTodoModal";
+
+import fields from "./../data/fields.js";
 import { useState } from "react";
-import NoTodo from "./components/NoTodo/NoTodo";
+import Step from "./components/Step/Step.jsx";
 
 function App() {
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [todos, setTodos] = useState([]);
-  const [filter, setFilter] = useState("all");
+  const [programmingFields] = useState(fields);
+  const [field, setField] = useState("-1");
+  const [steps, setSteps] = useState([]);
 
-  const addTodo = (title, description, isImportant) => {
-    // Validation ✅
+  const findFieldSteps = (newField) => {
+    if (newField !== "-1") {
+      const mainField = programmingFields.find(
+        (field) => field.id === newField
+      );
 
-    const newTodo = {
-      id: crypto.randomUUID(),
-      title,
-      description,
-      isImportant,
-      isCompleted: false,
-    };
-
-    setTodos([...todos, newTodo]);
-
-    setIsAddModalOpen(false);
-  };
-
-  const doTodo = (id) => {
-    const updatedTodos = todos.map((todo) => {
-      if (todo.id === id) {
-        todo.isCompleted = true;
-      }
-
-      return todo;
-    });
-
-    setTodos(updatedTodos);
-  };
-
-  const removeTodo = (id) => {
-    const updatedTodos = todos.filter((todo) => todo.id !== id);
-    setTodos(updatedTodos);
-  };
-
-  const filteredTodos = () => {
-    if (filter === "all") return todos;
-
-    if (filter === "completed") return todos.filter((todo) => todo.isCompleted);
-
-    if (filter === "not-completed")
-      return todos.filter((todo) => !todo.isCompleted);
+      setSteps(mainField.technologies);
+    }
   };
 
   return (
     <>
-      <Header />
-
-      <main className="container pb-25">
-        <div id="headline" className="space-y-3">
-          <h1 className="title">
-            <img src="./public/images/hourglass.png" className="size-8" />
-            <span> مدیریت و برنامه ریزی </span>
-          </h1>
-          <p className="max-w-[750px] text-zinc-700 text-sm font-Vazir-Medium!">
-            سبز تسک ابزاری قدرتمند برای سازماندهی وظایف روزمره، برنامه‌ریزی
-            پروژه‌ها و افزایش بهره‌وری شماست. با رابط کاربری ساده و امکانات
-            پیشرفته، از پیگیری وظایف تا همکاری تیمی را به آسانی مدیریت کنید.
-          </p>
+      <div id="card">
+        <div id="header">
+          <h1 className="title">مسیر سبز - راهنمای مسیر شما</h1>
         </div>
-
-        <div className="mt-14 border-b w-full border-zinc-200 flex items-center py-3 justify-between">
-          <div></div>
-          <div className="flex items-center gap-2">
-            <div className="dropdown">
-              <input id="dd-toggle" type="checkbox" hidden />
-
-              <label className="dd-btn" for="dd-toggle">
-                <span>
-                  نمایش{" "}
-                  {filter === "all"
-                    ? "همه"
-                    : filter === "completed"
-                    ? "تکمیل شده‌ها"
-                    : "تکمیل نشده‌ها"}
-                </span>
-                <i className="fa-solid fa-chevron-down"></i>
-              </label>
-
-              <div className="dropdown_menu" role="menu">
-                <div className="py-1">
-                  <label
-                    for="dd-toggle"
-                    className="menu-item"
-                    onClick={() => setFilter("all")}
-                  >
-                    همه
-                  </label>
-                  <label
-                    for="dd-toggle"
-                    className="menu-item"
-                    onClick={() => setFilter("completed")}
-                  >
-                    تکمیل شده ها
-                  </label>
-                  <label
-                    for="dd-toggle"
-                    className="menu-item"
-                    onClick={() => setFilter("not-completed")}
-                  >
-                    در انتظار انجام
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <button
-              id="open-dialog"
-              onClick={() => {
-                setIsAddModalOpen(true);
+        <div id="content">
+          <div>
+            <select
+              id="select-category"
+              value={field}
+              onChange={(event) => {
+                setField(event.target.value);
+                findFieldSteps(event.target.value);
               }}
             >
-              <span> ایجاد جدید </span>
-              <div className="btn-divider"></div>
-              <span>
-                <i className="fa-solid fa-plus"></i>
-              </span>
-            </button>
+              <option value="-1">لطفا فیلد مورد نظر را انتخاب نمایید</option>
+              {programmingFields.map((field) => (
+                <option key={field.id} value={field.id}>
+                  {field.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {field !== "-1" && (
+            <div>
+              <div className="selected-category-show">
+                <span> نقشه اختصاصی شما برای </span>
+                <span id="selected-roadmap-title"> {field} </span>:
+              </div>
+            </div>
+          )}
+
+          {/* <!-- is-empty className --> */}
+          <div id="roadmap" className={field === "-1" ? "is-empty" : ""}>
+            {field === "-1" ? (
+              <div className="empty-list">
+                <p>در ابتدا لطفا حوزه مورد نظر خود را انتخاب فرمایید</p>
+              </div>
+            ) : (
+              steps.map((step) => <Step key={step.id} {...step} />)
+            )}
           </div>
         </div>
+      </div>
 
-        {todos.length ? (
-          <section id="tasks" className="space-y-30 mt-5">
-            <div className="space-y-5">
-              <p className="text-sm">تسک های موجود:</p>
-              {filteredTodos().map((todo) => (
-                <Todo
-                  key={todo.id}
-                  {...todo}
-                  onDo={doTodo}
-                  onRemove={removeTodo}
-                />
-              ))}
-            </div>
-            <div className="space-y-5">
-              <p className="text-sm">تسک‌های تکمیل‌شده</p>
-              {todos.filter((todo) => todo.isCompleted).length ? (
-                todos
-                  .filter((todo) => todo.isCompleted)
-                  .map((todo) => (
-                    <Todo
-                      key={todo.id}
-                      {...todo}
-                      onDo={doTodo}
-                      onRemove={removeTodo}
-                    />
-                  ))
-              ) : (
-                <NoTodo />
-              )}
-            </div>
-          </section>
-        ) : (
-          <NoTodo />
-        )}
-      </main>
-
-      {isAddModalOpen && (
-        <AddTodoModal
-          onClose={() => {
-            setIsAddModalOpen(false);
-          }}
-          addTodoHandler={addTodo}
-        />
-      )}
-
-      <Footer />
+      <div id="background"></div>
     </>
   );
 }
