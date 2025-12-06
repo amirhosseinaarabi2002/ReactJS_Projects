@@ -1,73 +1,69 @@
+import { useEffect, useState } from "react";
 import "./App.css";
 
-import fields from "./../data/fields.js";
-import { useState } from "react";
-import Step from "./components/Step/Step.jsx";
-
 function App() {
-  const [programmingFields] = useState(fields);
-  const [field, setField] = useState("-1");
-  const [steps, setSteps] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const findFieldSteps = (newField) => {
-    if (newField !== "-1") {
-      const mainField = programmingFields.find(
-        (field) => field.id === newField
-      );
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchProducts = async () => {
+      const retry = 3;
 
-      setSteps(mainField.technologies);
-    }
-  };
+      for (let attempt = 1; attempt <= retry; attempt++) {
+        try {
+          setLoading(true);
+          setError(null);
+
+          const res = await fetch("https://fakestoreapi.com/products", {
+            signal: controller.signal,
+          });
+
+          console.log(res);
+
+          if (!res.ok) {
+            throw new Error("Failed to fetch products");
+          }
+
+          const data = await res.json();
+          return setProducts(data);
+        } catch (err) {
+          if (attempt === retry) {
+            setError(err.message);
+          }
+
+          const backoffTime = 2 ** (attempt - 1) * 1000;
+          await new Promise((res) => setTimeout(res, backoffTime));
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      controller.abort(); // clean up
+    };
+  }, []);
+
+  if (loading) {
+    return <p>wait for a minute...</p>;
+  }
+
+  if (error) {
+    return <p style={{ color: "red" }}>{error}</p>;
+  }
 
   return (
-    <>
-      <div id="card">
-        <div id="header">
-          <h1 className="title">مسیر سبز - راهنمای مسیر شما</h1>
-        </div>
-        <div id="content">
-          <div>
-            <select
-              id="select-category"
-              value={field}
-              onChange={(event) => {
-                setField(event.target.value);
-                findFieldSteps(event.target.value);
-              }}
-            >
-              <option value="-1">لطفا فیلد مورد نظر را انتخاب نمایید</option>
-              {programmingFields.map((field) => (
-                <option key={field.id} value={field.id}>
-                  {field.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {field !== "-1" && (
-            <div>
-              <div className="selected-category-show">
-                <span> نقشه اختصاصی شما برای </span>
-                <span id="selected-roadmap-title"> {field} </span>:
-              </div>
-            </div>
-          )}
-
-          {/* <!-- is-empty className --> */}
-          <div id="roadmap" className={field === "-1" ? "is-empty" : ""}>
-            {field === "-1" ? (
-              <div className="empty-list">
-                <p>در ابتدا لطفا حوزه مورد نظر خود را انتخاب فرمایید</p>
-              </div>
-            ) : (
-              steps.map((step) => <Step key={step.id} {...step} />)
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div id="background"></div>
-    </>
+    <div>
+      {products.map((product) => (
+        <p key={product.id}>
+          {product.id}. {product.title}
+        </p>
+      ))}
+    </div>
   );
 }
 
