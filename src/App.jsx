@@ -3,13 +3,26 @@ import Footer from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
 import Todo from "./components/Todo/Todo";
 import AddTodoModal from "./components/AddTodoModal/AddTodoModal";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NoTodo from "./components/NoTodo/NoTodo";
 
 function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [todos, setTodos] = useState([]);
   const [filter, setFilter] = useState("all");
+
+  useEffect(() => {
+    const localTodos = localStorage.getItem("todos");
+
+    if (localTodos) {
+      setTodos(JSON.parse(localTodos));
+    }
+
+    return () => {
+      console.log(`unmounted ${localTodos}`);
+      
+    }
+  }, [todos]);
 
   const addTodo = (title, description, isImportant) => {
     // Validation ✅
@@ -25,6 +38,7 @@ function App() {
     setTodos([...todos, newTodo]);
 
     setIsAddModalOpen(false);
+    localStorage.setItem("todos", JSON.stringify({...todos, newTodo}))
   };
 
   const doTodo = (id) => {
@@ -42,6 +56,7 @@ function App() {
   const removeTodo = (id) => {
     const updatedTodos = todos.filter((todo) => todo.id !== id);
     setTodos(updatedTodos);
+    
   };
 
   const filteredTodos = () => {

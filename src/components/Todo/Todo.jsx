@@ -7,6 +7,13 @@ function Todo({
   onDo,
   onRemove,
 }) {
+  useEffect(() => {
+    console.log(`mount ${title}`); // mounting
+
+    return () => {
+      console.log(`unmount ${title}`); // unmounting
+    };
+  }, [isCompleted]); // updating
   return (
     <div className="space-y-0.5">
       <article className="task-card">
